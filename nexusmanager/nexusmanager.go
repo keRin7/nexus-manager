@@ -3,6 +3,8 @@ package nexusmanager
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/keRin7/nexus-manager/pkg/rest_client"
 	"github.com/sirupsen/logrus"
@@ -154,8 +156,14 @@ func (c *NexusManager) GetImageSHA(image string, tag string) map[string][]string
 }
 
 func (c *NexusManager) GetDataV1(image string, tag string) string {
+	start := time.Now()
+
 	url := fmt.Sprintf("%s/repository/%s/v2/%s/manifests/%s", c.Config.Nexus_url, c.Config.Nexus_repo, image, tag)
 	out, _ := c.rest.DoGet(url, nil, c.Config.Nexus_username, c.Config.Nexus_password)
+
+	elapsed := time.Since(start)
+	log.Printf("1.Binomial took %s", elapsed)
+	start = time.Now()
 
 	var imageManifestV1 ImageManifestV1
 	err := json.Unmarshal(out, &imageManifestV1)
@@ -163,13 +171,20 @@ func (c *NexusManager) GetDataV1(image string, tag string) string {
 		logrus.Fatal(err)
 	}
 
+	elapsed = time.Since(start)
+	log.Printf("2.Binomial took %s", elapsed)
+	start = time.Now()
+
 	var layersHistory2 LayersHistory2
 	err = json.Unmarshal([]byte(imageManifestV1.History[0].V1Compatibility), &layersHistory2)
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	fmt.Println(layersHistory2.ID, layersHistory2.Created)
-	return "nil"
+	elapsed = time.Since(start)
+	log.Printf("2.Binomial took %s", elapsed)
+
+	//fmt.Println(layersHistory2.ID, layersHistory2.Created)
+	return layersHistory2.Created
 
 }

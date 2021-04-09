@@ -25,10 +25,10 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	//	}
 	api := router.Group("/")
 	{
-		lists := api.Group("lists")
+		lists := api.Group("coolrocket")
 		{
 			//	lists.POST("/", h.createList)
-			lists.GET("/", h.getRoot)
+			lists.GET("/:id", h.getRoot)
 			//	lists.GET("/:id", h.getListById)
 			//	lists.PUT("/:id", h.updateList)
 			//	lists.DELETE("/:id", h.deleteList)
