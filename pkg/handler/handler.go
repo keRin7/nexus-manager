@@ -16,23 +16,38 @@ func NewHandler(nexusmanager *nexusmanager.NexusManager) *Handler {
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {
+
 	router := gin.New()
 
-	//	auth := router.Group("/auth")
-	//	{
+	//auth := router.Group("/auth")
+	//{
+	//	lists.GET("/auth", h.getAuthRoot)
 	//		auth.POST("/sign-up", h.signUp)
 	//		auth.POST("/sign-in", h.signIn)
-	//	}
+	//}
 	api := router.Group("/")
 	{
 		lists := api.Group("coolrocket")
 		{
+			lists.Use(h.authMiddleware)
 			//	lists.POST("/", h.createList)
 			lists.GET("/:id", h.getRoot)
 			//	lists.GET("/:id", h.getListById)
 			//	lists.PUT("/:id", h.updateList)
 			//	lists.DELETE("/:id", h.deleteList)
 		}
+		auth := api.Group("auth")
+		{
+			auth.GET("/", h.getAuthRoot)
+			auth.POST("/", h.postAuthRoot)
+		}
+
+		//	lists.POST("/", h.createList)
+
+		//	lists.GET("/:id", h.getListById)
+		//	lists.PUT("/:id", h.updateList)
+		//	lists.DELETE("/:id", h.deleteList)
+
 	}
 	return router
 }

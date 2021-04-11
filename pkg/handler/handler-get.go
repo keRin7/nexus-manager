@@ -1,66 +1,81 @@
 package handler
 
 import (
-	"log"
 	"net/http"
 	"sort"
 	"strconv"
-	"time"
+	"text/template"
 
 	"github.com/gin-gonic/gin"
+	"github.com/keRin7/nexus-manager/nexusmanager"
+	"github.com/sirupsen/logrus"
 )
 
 type TagsList struct {
 	Data []string `json:"data"`
 }
 
-type SizeList struct {
-	id   string
-	size string
-	data string
+type Image struct {
+	Id   string
+	Size string
+	Data string
+}
+
+type Images struct {
+	Images []Image
+}
+
+type DataStruct struct {
+	Images
+	Repos       nexusmanager.Repositories
+	CurrentRepo string
+}
+
+var FirstRequestPath string
+
+func (h *Handler) authMiddleware(c *gin.Context) {
+	if v, err := c.Cookie("token"); err != nil {
+		FirstRequestPath = c.Request.URL.Path
+		c.Redirect(http.StatusFound, "/auth")
+
+	} else {
+		if v == h.nexusmanager.Config.AppPassword {
+			c.Next()
+		}
+	}
+
+}
+
+func (h *Handler) getAuthRoot(c *gin.Context) {
+	tmpl, _ := template.ParseFiles("template/auth.html")
+	tmpl.Execute(c.Writer, nil)
+}
+
+func (h *Handler) postAuthRoot(c *gin.Context) {
+	if password, ok := c.GetPostForm("password"); ok && password == h.nexusmanager.Config.AppPassword {
+		username, _ := c.GetPostForm("username")
+		logrus.Println("User " + username + " login success from IP " + c.Request.RemoteAddr)
+
+		c.SetCookie("token", h.nexusmanager.Config.AppPassword, 3000, "/", c.Request.Host, false, true)
+		c.Redirect(http.StatusFound, FirstRequestPath)
+	} else {
+		logrus.Println("Wrong password, IP ", "127.0.0.1", " password: ", password)
+		c.Redirect(http.StatusFound, "/auth")
+	}
 }
 
 func (h *Handler) getRoot(c *gin.Context) {
-	//var view map[string]interface{}
-	var list []SizeList
-	var out string
-	//fmt.Println("%v", )
-	start := time.Now()
-	tags := h.nexusmanager.ListTagsByImage("coolrocket/" + c.Param("id"))
-
+	var list Images
+	tags := h.nexusmanager.ListTagsByImage(h.nexusmanager.Config.Nexus_repo + "/" + c.Param("id"))
+	repo := h.nexusmanager.List()
 	for _, v := range tags {
-		//headers := h.nexusmanager.GetImageSHA("coolrocket/"+c.Param("id"), v)
-
-		//	view[strconv.Itoa(k)] = v
-		data := h.nexusmanager.GetDataV1("coolrocket/"+c.Param("id"), v)
-		//data := "123"
-		size := h.nexusmanager.GetSize("coolrocket/"+c.Param("id"), v)
-		//size := 1024 * 1024 * 1024
-		list = append(list, SizeList{v, strconv.FormatInt(size/1024/1024, 10), data})
-		//out = out + "id: " + v + " size: " + strconv.FormatInt(size/1024/1024, 10) + "Mb date-created-last-layer:" + data + "<BR>"
-		//	fmt.Println(v, size/1024/1024)
-		//		fmt.Println(v, headers["Last-Modified"], headers["Date"])
+		data := h.nexusmanager.GetDataV1(h.nexusmanager.Config.Nexus_repo+"/"+c.Param("id"), v)
+		size := h.nexusmanager.GetSize(h.nexusmanager.Config.Nexus_repo+"/"+c.Param("id"), v)
+		list.Images = append(list.Images, Image{v, strconv.FormatInt(size/1024/1024, 10), data})
 	}
-
-	sort.Slice(list, func(i, j int) bool {
-		return list[i].data < list[j].data
+	sort.Slice(list.Images, func(i, j int) bool {
+		return list.Images[i].Data < list.Images[j].Data
 	})
-
-	for _, v := range list {
-		out = out + "id: " + v.id + " size: " + v.size + "Mb_________ " + v.data + "<BR>"
-	}
-
-	//c.JSON(http.StatusOK, tags)
-	//	c.JSON(http.StatusOK, TagsList{
-	//		Data: tags,
-	//	})
-	//var s1 string
-	//s1 = "123"
-	//c.Header("")
-	//c.String(http.StatusOK, "<html><br>OK<br>OK</html>")
-	elapsed := time.Since(start)
-	log.Printf("Binomial took %s", elapsed)
-	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(out))
-	//c.HTML(http.StatusOK, "<h1>%s</h1><div>%s</div>", s1)
-	//c.
+	tmpl, _ := template.ParseFiles("template/index.html")
+	tmpl.Execute(c.Writer, &DataStruct{list, *repo, c.Param("id")})
 }
