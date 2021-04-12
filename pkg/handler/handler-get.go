@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"text/template"
 
 	"github.com/gin-gonic/gin"
@@ -33,22 +34,6 @@ type DataStruct struct {
 	Username    string
 }
 
-var FirstRequestPath string
-
-func (h *Handler) authMiddleware(c *gin.Context) {
-	if v, err := c.Cookie("Authorization"); err != nil {
-		FirstRequestPath = c.Request.URL.Path
-		c.Redirect(http.StatusFound, "/auth")
-
-	} else {
-		fmt.Println(h.nexusmanager.Auth.ParseToken(v))
-		if v == h.nexusmanager.Config.AppPassword {
-			c.Next()
-		}
-	}
-
-}
-
 func (h *Handler) getAuthRoot(c *gin.Context) {
 	tmpl, _ := template.ParseFiles("template/auth.html")
 	tmpl.Execute(c.Writer, nil)
@@ -64,7 +49,7 @@ func (h *Handler) postAuthRoot(c *gin.Context) {
 					c.Redirect(http.StatusFound, "/auth")
 					return
 				} else {
-					c.SetCookie("Authorization", token, 3000, "/", "127.0.0.1:8080", false, true)
+					c.SetCookie(authorizationHeader, "Bearer "+token, 3000, "/", "127.0.0.1:8080", false, true)
 					c.Redirect(http.StatusFound, FirstRequestPath)
 					return
 				}
@@ -86,6 +71,10 @@ func (h *Handler) postAuthRoot(c *gin.Context) {
 }
 
 func (h *Handler) getRoot(c *gin.Context) {
+	token, _ := h.GetToken(c)
+	username := h.nexusmanager.Auth.GetUsername(token)
+	logrus.Println("User: ", username, "get access to: ", h.nexusmanager.Config.Nexus_repo+"/"+c.Param("id"))
+
 	var list Images
 	tags := h.nexusmanager.ListTagsByImage(h.nexusmanager.Config.Nexus_repo + "/" + c.Param("id"))
 	repo := h.nexusmanager.List()
@@ -98,5 +87,17 @@ func (h *Handler) getRoot(c *gin.Context) {
 		return list.Images[i].Data < list.Images[j].Data
 	})
 	tmpl, _ := template.ParseFiles("template/index.html")
-	tmpl.Execute(c.Writer, &DataStruct{list, *repo, c.Param("id"), "Maxim.Vorobyev"})
+	tmpl.Execute(c.Writer, &DataStruct{list, *repo, c.Param("id"), username})
+}
+
+func (h *Handler) GetToken(c *gin.Context) (string, error) {
+	if header, err := c.Cookie(authorizationHeader); err != nil {
+		return "", err
+	} else {
+		headers := strings.Split(header, " ")
+		if len(headers) != 2 {
+			return "", errors.New("auth header damaged")
+		}
+		return headers[1], nil
+	}
 }

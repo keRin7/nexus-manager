@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -12,12 +13,11 @@ type Auth struct {
 
 type tokenClaims struct {
 	jwt.StandardClaims
-	username string
+	Username string `json:"user_name"`
 }
 
 const (
-	solt       = "dsfjdewkd3289djsoidwe"
-	signingKey = "fsfdsfewr435re3wrfd43R$#443Swww"
+	signingKey = "fsfdsfewr435re3wrfd43Ree443Swww"
 	tokenTTL   = 12 * time.Hour
 )
 
@@ -28,6 +28,7 @@ func (t *Auth) CreateToken(user string) (string, error) {
 			IssuedAt:  time.Now().Unix()},
 		user,
 	})
+	fmt.Println("User:", user)
 	return token.SignedString([]byte(signingKey))
 }
 
@@ -46,7 +47,13 @@ func (t *Auth) ParseToken(accessToken string) (string, error) {
 	if !ok {
 		return "", errors.New("token claims are not of type *tokenClaims")
 	}
+	return claims.Username, nil
+}
 
-	return claims.username, nil
-
+func (t *Auth) GetUsername(accessToken string) string {
+	if username, ok := t.ParseToken(accessToken); ok != nil {
+		return "unknown"
+	} else {
+		return username
+	}
 }
