@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
@@ -29,16 +30,18 @@ type DataStruct struct {
 	Images
 	Repos       nexusmanager.Repositories
 	CurrentRepo string
+	Username    string
 }
 
 var FirstRequestPath string
 
 func (h *Handler) authMiddleware(c *gin.Context) {
-	if v, err := c.Cookie("token"); err != nil {
+	if v, err := c.Cookie("Authorization"); err != nil {
 		FirstRequestPath = c.Request.URL.Path
 		c.Redirect(http.StatusFound, "/auth")
 
 	} else {
+		fmt.Println(h.nexusmanager.Auth.ParseToken(v))
 		if v == h.nexusmanager.Config.AppPassword {
 			c.Next()
 		}
@@ -52,16 +55,34 @@ func (h *Handler) getAuthRoot(c *gin.Context) {
 }
 
 func (h *Handler) postAuthRoot(c *gin.Context) {
-	if password, ok := c.GetPostForm("password"); ok && password == h.nexusmanager.Config.AppPassword {
-		username, _ := c.GetPostForm("username")
-		logrus.Println("User " + username + " login success from IP " + c.Request.RemoteAddr)
-
-		c.SetCookie("token", h.nexusmanager.Config.AppPassword, 3000, "/", c.Request.Host, false, true)
-		c.Redirect(http.StatusFound, FirstRequestPath)
-	} else {
-		logrus.Println("Wrong password, IP ", "127.0.0.1", " password: ", password)
-		c.Redirect(http.StatusFound, "/auth")
+	if username, ok := c.GetPostForm("username"); ok {
+		if password, ok := c.GetPostForm("password"); ok {
+			if h.nexusmanager.Ldapcli.TryToBind(username, password) {
+				logrus.Println("User " + username + " login success from IP " + c.Request.RemoteAddr)
+				if token, err := h.nexusmanager.Auth.CreateToken(username); err != nil {
+					logrus.Printf("Error generate JWT: %s", err.Error())
+					c.Redirect(http.StatusFound, "/auth")
+					return
+				} else {
+					c.SetCookie("Authorization", token, 3000, "/", "127.0.0.1:8080", false, true)
+					c.Redirect(http.StatusFound, FirstRequestPath)
+					return
+				}
+			}
+		}
 	}
+	logrus.Println("Wrong password, IP ", c.Request.RemoteAddr)
+	c.Redirect(http.StatusFound, "/auth")
+	//if password, ok := c.GetPostForm("password"); ok && password == h.nexusmanager.Config.AppPassword {
+	//	username, _ := c.GetPostForm("username")
+	//	logrus.Println("User " + username + " login success from IP " + c.Request.RemoteAddr)
+
+	//	c.SetCookie("token", h.nexusmanager.Config.AppPassword, 3000, "/", c.Request.Host, false, true)
+	//	c.Redirect(http.StatusFound, FirstRequestPath)
+	//} else {
+	//	logrus.Println("Wrong password, IP ", "127.0.0.1", " password: ", password)
+	//	c.Redirect(http.StatusFound, "/auth")
+	//}
 }
 
 func (h *Handler) getRoot(c *gin.Context) {
@@ -77,5 +98,5 @@ func (h *Handler) getRoot(c *gin.Context) {
 		return list.Images[i].Data < list.Images[j].Data
 	})
 	tmpl, _ := template.ParseFiles("template/index.html")
-	tmpl.Execute(c.Writer, &DataStruct{list, *repo, c.Param("id")})
+	tmpl.Execute(c.Writer, &DataStruct{list, *repo, c.Param("id"), "Maxim.Vorobyev"})
 }

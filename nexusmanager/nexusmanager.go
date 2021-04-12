@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/keRin7/nexus-manager/pkg/appcache"
+	"github.com/keRin7/nexus-manager/pkg/auth"
+	"github.com/keRin7/nexus-manager/pkg/ldapcli"
 	"github.com/keRin7/nexus-manager/pkg/rest_client"
 	"github.com/sirupsen/logrus"
 )
@@ -51,16 +53,20 @@ type LayersHistory2 struct {
 }
 
 type NexusManager struct {
-	Config *Config
-	cache  *appcache.AppCache
-	rest   *rest_client.Rest_client
+	Config  *Config
+	cache   *appcache.AppCache
+	rest    *rest_client.Rest_client
+	Ldapcli *ldapcli.LdapCli
+	Auth    *auth.Auth
 }
 
 func New(config *Config) *NexusManager {
 	return &NexusManager{
-		Config: config,
-		cache:  appcache.NewCache(),
-		rest:   rest_client.NewRestClient(),
+		Config:  config,
+		cache:   appcache.NewCache(),
+		rest:    rest_client.NewRestClient(),
+		Ldapcli: ldapcli.New(config.Ldap),
+		Auth:    &auth.Auth{},
 	}
 }
 

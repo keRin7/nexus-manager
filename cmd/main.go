@@ -21,6 +21,7 @@ func main() {
 	}
 
 	nexus := nexusmanager.New(config)
+	nexus.Ldapcli.Init()
 	//nexus.List()
 	fmt.Println()
 	//tags := nexus.ListTagsByImage("coolrocket/vnikay-dbupdate")
