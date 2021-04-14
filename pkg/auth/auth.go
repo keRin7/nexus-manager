@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -28,7 +27,7 @@ func (t *Auth) CreateToken(user string) (string, error) {
 			IssuedAt:  time.Now().Unix()},
 		user,
 	})
-	fmt.Println("User:", user)
+	//fmt.Println("User:", user)
 	return token.SignedString([]byte(signingKey))
 }
 

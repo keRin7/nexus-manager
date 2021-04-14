@@ -49,5 +49,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		//	lists.DELETE("/:id", h.deleteList)
 
 	}
+
+	router.Static("/assets", "./assets")
+
 	return router
 }

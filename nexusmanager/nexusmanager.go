@@ -11,17 +11,29 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type NexusManager struct {
+	Config  *Config
+	cache   *appcache.AppCache
+	rest    *rest_client.Rest_client
+	Ldapcli *ldapcli.LdapCli
+	Auth    *auth.Auth
+}
+
+// specific header for nexus API
 const ACCEPT_HEADER = "application/vnd.docker.distribution.manifest.v2+json"
 
+// func List
 type Repositories struct {
 	Images []string `json:"repositories"`
 }
 
+// func ListTagsByImage
 type ImageTags struct {
 	Name string   `json:"name"`
 	Tags []string `json:"tags"`
 }
 
+// func ImageManifest / GetSize
 type ImageManifest struct {
 	SchemaVersion int64       `json:"schemaVersion"`
 	MediaType     string      `json:"mediaType"`
@@ -29,6 +41,7 @@ type ImageManifest struct {
 	Layers        []LayerInfo `json:"layers"`
 }
 
+// including in ImageManifest
 type LayerInfo struct {
 	MediaType string `json:"mediaType"`
 	Size      int64  `json:"size"`
@@ -50,14 +63,6 @@ type LayersHistory1 struct {
 type LayersHistory2 struct {
 	Created string `json:"created"`
 	ID      string `json:"id"`
-}
-
-type NexusManager struct {
-	Config  *Config
-	cache   *appcache.AppCache
-	rest    *rest_client.Rest_client
-	Ldapcli *ldapcli.LdapCli
-	Auth    *auth.Auth
 }
 
 func New(config *Config) *NexusManager {
@@ -163,8 +168,6 @@ func (c *NexusManager) GetImageSHA(image string, tag string) map[string][]string
 }
 
 func (c *NexusManager) GetDataV1(image string, tag string) string {
-	//start := time.Now()
-
 	if v, ok := c.cache.Get(image + tag); ok {
 		return v
 	}
@@ -172,19 +175,11 @@ func (c *NexusManager) GetDataV1(image string, tag string) string {
 	url := fmt.Sprintf("%s/repository/%s/v2/%s/manifests/%s", c.Config.Nexus_url, c.Config.Nexus_repo, image, tag)
 	out, _ := c.rest.DoGet(url, nil, c.Config.Nexus_username, c.Config.Nexus_password)
 
-	//elapsed := time.Since(start)
-	//log.Printf("1.Binomial took %s", elapsed)
-	//start = time.Now()
-
 	var imageManifestV1 ImageManifestV1
 	err := json.Unmarshal(out, &imageManifestV1)
 	if err != nil {
 		logrus.Fatal(err)
 	}
-
-	//elapsed = time.Since(start)
-	//log.Printf("2.Binomial took %s", elapsed)
-	//start = time.Now()
 
 	var layersHistory2 LayersHistory2
 	err = json.Unmarshal([]byte(imageManifestV1.History[0].V1Compatibility), &layersHistory2)
@@ -192,10 +187,6 @@ func (c *NexusManager) GetDataV1(image string, tag string) string {
 		logrus.Fatal(err)
 	}
 	c.cache.Set(image+tag, layersHistory2.Created)
-	//elapsed = time.Since(start)
-	//log.Printf("2.Binomial took %s", elapsed)
-
-	//fmt.Println(layersHistory2.ID, layersHistory2.Created)
 	return layersHistory2.Created
 
 }
