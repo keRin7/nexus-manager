@@ -55,12 +55,12 @@
         </div>
       </div>
       {{ $repo := .CurrentRepo }}
-      <form action="/delete" method="post">
+      <form action="/delete/" method="POST">
       {{range .Images.Images}}
       <div class="row">
        <div class="input-group mb3">
           <div class="input-group-text checkbox rows col-md-1">
-            <input class="checkbox rows mt-0" type="checkbox" value="{{ $repo }}/{{ .Id }}" id="flexCheckChecked" >
+            <input class="checkbox rows mt-0" type="checkbox" value="{{ $repo }}/{{ .Id }}" id="flexCheckChecked" name="flexCheckChecked" >
           </div>
           <div class="input-group-text col-md-3">
             {{ .Id }}

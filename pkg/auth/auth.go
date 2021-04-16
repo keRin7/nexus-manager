@@ -56,3 +56,21 @@ func (t *Auth) GetUsername(accessToken string) string {
 		return username
 	}
 }
+
+func (t *Auth) CheckAccess(accessToken string) (bool, error) {
+	AccessList := []string{"maxim.vorobyev", "www"}
+	var username string
+	var err error
+
+	if username, err = t.ParseToken(accessToken); err != nil {
+		return false, err
+	}
+
+	for _, v := range AccessList {
+		if v == username {
+			return true, nil
+		}
+	}
+	return false, nil
+
+}
