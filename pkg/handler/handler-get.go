@@ -77,21 +77,21 @@ func (h *Handler) postAuthRoot(c *gin.Context) {
 func (h *Handler) getRoot(c *gin.Context) {
 	token, _ := h.GetToken(c)
 	username := h.nexusmanager.Auth.GetUsername(token)
-	logrus.Println("User: ", username, "get access to: ", h.nexusmanager.Config.Nexus_repo+"/"+c.Param("id"))
+	logrus.Println("User: ", username, "get access to: ", h.nexusmanager.Config.Nexus_repo+c.Param("id"))
 
 	var list Images
-	tags := h.nexusmanager.ListTagsByImage(h.nexusmanager.Config.Nexus_repo + "/" + c.Param("id"))
+	tags := h.nexusmanager.ListTagsByImage(h.nexusmanager.Config.Nexus_repo + c.Param("id"))
 	repo := h.nexusmanager.List()
 	for _, v := range tags {
-		data := h.nexusmanager.GetDataV1(h.nexusmanager.Config.Nexus_repo+"/"+c.Param("id"), v)
-		size := h.nexusmanager.GetSize(h.nexusmanager.Config.Nexus_repo+"/"+c.Param("id"), v)
+		data := h.nexusmanager.GetDataV1(h.nexusmanager.Config.Nexus_repo+c.Param("id"), v)
+		size := h.nexusmanager.GetSize(h.nexusmanager.Config.Nexus_repo+c.Param("id"), v)
 		list.Images = append(list.Images, Image{v, strconv.FormatInt(size/1024/1024, 10), data})
 	}
 	sort.Slice(list.Images, func(i, j int) bool {
 		return list.Images[i].Data < list.Images[j].Data
 	})
 	tmpl, _ := template.ParseFiles("template/index.html")
-	tmpl.Execute(c.Writer, &DataStruct{list, *repo, h.nexusmanager.Config.Nexus_repo + "/" + c.Param("id"), username})
+	tmpl.Execute(c.Writer, &DataStruct{list, *repo, h.nexusmanager.Config.Nexus_repo + c.Param("id"), username})
 }
 
 func (h *Handler) GetToken(c *gin.Context) (string, error) {
@@ -146,7 +146,7 @@ func (h *Handler) PostDelete(c *gin.Context) {
 		return
 
 	}
-	logrus.Println("Username:" + username + " tries to delete images, forbidden")
+	logrus.Println("Username:" + username + " tries to delete images ,but ... forbidden")
 
 	tmpl, _ := template.ParseFiles("template/simple-text.html")
 	tmpl.Execute(c.Writer, gin.H{"Text": "Forbidden"})

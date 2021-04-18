@@ -19,43 +19,20 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	router := gin.New()
 
-	//auth := router.Group("/auth")
-	//{
-	//	lists.GET("/auth", h.getAuthRoot)
-	//		auth.POST("/sign-up", h.signUp)
-	//		auth.POST("/sign-in", h.signIn)
-	//}
-	api := router.Group("/")
+	delete := router.Group("/delete")
 	{
-		lists := api.Group("coolrocket")
-		{
-			lists.Use(h.authMiddleware)
-			//	lists.POST("/", h.createList)
-			lists.GET("/:id", h.getRoot)
-			//	lists.GET("/:id", h.getListById)
-			//	lists.PUT("/:id", h.updateList)
-			//	lists.DELETE("/:id", h.deleteList)
-		}
-		delete := api.Group("delete")
-		{
-			//	lists.POST("/", h.createList)
-			delete.POST("/", h.PostDelete)
-			//	lists.GET("/:id", h.getListById)
-			//	lists.PUT("/:id", h.updateList)
-			//	lists.DELETE("/:id", h.deleteList)
-		}
-		auth := api.Group("auth")
-		{
-			auth.GET("/", h.getAuthRoot)
-			auth.POST("/", h.postAuthRoot)
-		}
+		delete.POST("/", h.PostDelete)
+	}
+	auth := router.Group("/auth")
+	{
+		auth.GET("/", h.getAuthRoot)
+		auth.POST("/", h.postAuthRoot)
+	}
 
-		//	lists.POST("/", h.createList)
-
-		//	lists.GET("/:id", h.getListById)
-		//	lists.PUT("/:id", h.updateList)
-		//	lists.DELETE("/:id", h.deleteList)
-
+	repos := router.Group("/:repo")
+	{
+		repos.Use(h.authMiddleware)
+		repos.GET("/*id", h.getRoot)
 	}
 
 	router.Static("/assets", "./assets")
