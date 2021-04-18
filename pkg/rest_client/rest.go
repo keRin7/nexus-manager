@@ -2,6 +2,8 @@ package rest_client
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -174,4 +176,35 @@ func (r *Rest_client) DoPut(path string, body io.Reader, headers map[string]stri
 	//fmt.Println(string(body))
 	return nil
 
+}
+
+func (r *Rest_client) DoDelete(path string, headers map[string]string, username string, password string) ([]byte, error) {
+
+	req, err := http.NewRequest(http.MethodDelete, path, nil)
+
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
+
+	req.SetBasicAuth(username, password)
+	for k, v := range headers {
+		//fmt.Printf("%s %s", k, v)
+		req.Header.Add(k, v)
+	}
+
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusAccepted {
+		return nil, errors.New(fmt.Sprintf("(DoDelete:)HTTP Code: %d", resp.StatusCode))
+	} else {
+		bodyResp, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		return bodyResp, nil
+	}
 }

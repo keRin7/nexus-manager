@@ -3,6 +3,7 @@ package nexusmanager
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/keRin7/nexus-manager/pkg/appcache"
 	"github.com/keRin7/nexus-manager/pkg/auth"
@@ -75,6 +76,15 @@ func New(config *Config) *NexusManager {
 	}
 }
 
+/*
+List()
+nexus.com/repository/ROOT-REPO/v2/_catalog    			-get list repos in ROOT-REPO
+ListTagsByImage()
+nexus.com/repository/ROOT-REPO/v2/IMAGE-NAME/tags/list	-get list tags if i know IMAGE-NAME
+
+
+
+*/
 func (c *NexusManager) List() *Repositories {
 	//c.Config.Nexus_repo
 	headers := map[string]string{
@@ -150,23 +160,6 @@ func (c *NexusManager) GetSize(image string, tag string) int64 {
 
 }
 
-func (c *NexusManager) GetImageSHA(image string, tag string) map[string][]string {
-	headers := map[string]string{
-		"Accept": ACCEPT_HEADER,
-	}
-
-	url := fmt.Sprintf("%s/repository/%s/v2/%s/manifests/%s", c.Config.Nexus_url, c.Config.Nexus_repo, image, tag)
-	out, h := c.rest.DoGet(url, headers, c.Config.Nexus_username, c.Config.Nexus_password)
-
-	var imageManifest ImageManifest
-	err := json.Unmarshal(out, &imageManifest)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	return h
-
-}
-
 func (c *NexusManager) GetDataV1(image string, tag string) string {
 	if v, ok := c.cache.Get(image + tag); ok {
 		return v
@@ -189,4 +182,46 @@ func (c *NexusManager) GetDataV1(image string, tag string) string {
 	c.cache.Set(image+tag, layersHistory2.Created)
 	return layersHistory2.Created
 
+}
+
+func (c *NexusManager) GetImageSHA(image string, tag string) (string, error) {
+	headers := map[string]string{
+		"Accept": ACCEPT_HEADER,
+	}
+
+	url := fmt.Sprintf("%s/repository/%s/v2/%s/manifests/%s", c.Config.Nexus_url, c.Config.Nexus_repo, image, tag)
+	out, h := c.rest.DoGet(url, headers, c.Config.Nexus_username, c.Config.Nexus_password)
+
+	var imageManifest ImageManifest
+	err := json.Unmarshal(out, &imageManifest)
+	if err != nil {
+		return "", err
+	}
+	//fmt.Printf("%v", h)
+	return strings.Join(h["Docker-Content-Digest"], ""), nil
+
+}
+
+func (c *NexusManager) DeleteImageByTag(imageNameWithRepoPath string, tag string) error {
+	sha, err := c.GetImageSHA(imageNameWithRepoPath, tag)
+
+	if err != nil {
+		logrus.Printf("Error delete image %s", err.Error())
+		return err
+	}
+
+	headers := map[string]string{
+		"Accept": ACCEPT_HEADER,
+	}
+
+	url := fmt.Sprintf("%s/repository/%s/v2/%s/manifests/%s", c.Config.Nexus_url, c.Config.Nexus_repo, imageNameWithRepoPath, sha)
+	out, err := c.rest.DoDelete(url, headers, c.Config.Nexus_username, c.Config.Nexus_password)
+	//logrus.Println(url)
+	if err != nil {
+		logrus.Printf("Error delete image %s", err.Error())
+		return err
+	}
+
+	fmt.Printf("%v", out)
+	return nil
 }
