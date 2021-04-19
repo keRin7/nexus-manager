@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <!-- Bootstrap CSS -->
+    <link href="/assets/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+
+    <title>NexusManager</title>
+  </head>
+  <body>
+    <div class="container ">
+      <div class="row ">
+        <div class="w-75 my-4">
+           <h2><center>{{ .CurrentRepo }}</center></h2><br>
+        </div>
+    <div class="w-25 my-4">
+      <h2><center>{{ .Username }}</center></h2><br>
+    </div>
+  </div>
+  </div>
+
+<div class="container-fluid">
+<div class="row">
+    <div class="col-md-2">
+      <div class="btn-group text-center">
+        <button type="button" class="btn btn-success dropdown-toggle " data-bs-toggle="dropdown" aria-expanded="false">
+          Repositories
+        </button>
+        <ul class="dropdown-menu">
+          {{range .Repos.Images}}
+          <li><a class="dropdown-item " href="/{{ . }}">{{ . }}</a></li>
+           {{end}}
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-10">
+      <div class="row">
+        <div class="input-group mb3">
+          <div class="input-group-text checkbox rows select-all  col-md-1">
+            <input id="all" type="checkbox" />
+          </div>
+          <div class="input-group-text  col-md-3">
+            <h5>Image tag</h5>
+          </div>
+          <div class="input-group-text  col-md-1">
+            <h5>Image size</h5>
+          </div>
+          <div class="input-group-text  col-md-3">
+            <h5>Top layer modification date</h5>
+          </div>
+        </div>
+      </div>
+      {{ $repo := .CurrentRepo }}
+      <form action="/delete/" method="POST">
+      {{range .Images.Images}}
+      <div class="row">
+       <div class="input-group mb3">
+          <div class="input-group-text checkbox rows col-md-1">
+            <input class="checkbox rows mt-0" type="checkbox" value="{{ $repo }}/{{ .Id }}" id="flexCheckChecked" name="flexCheckChecked" >
+          </div>
+          <div class="input-group-text col-md-3">
+            {{ .Id }}
+          </div>
+          <div  class="input-group-text col-md-1">
+            {{ .Size }}Mb
+          </div>
+          <div  class="input-group-text col-md-3">
+            {{ .Data }}
+          </div>
+       </div>
+      </div>
+      {{end}}
+      <div class="my-4">
+        <button type="submit" class="btn btn-danger">Delete selected items</button>
+      </div>
+      </form>
+</div>
+</div>
+
+    <!-- Optional JavaScript; choose one of the two! -->
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="/assets/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.1/jquery.min.js"></script>
+    <script>
+         $('#all').change(function(e) {
+             if (e.currentTarget.checked) {
+              $('.rows').find('input[type="checkbox"]').prop('checked', true);
+            } else {
+              $('.rows').find('input[type="checkbox"]').prop('checked', false);
+            }
+          });
+      </script>
+
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js" integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc" crossorigin="anonymous"></script>
+    -->
+  </body>
+</html>

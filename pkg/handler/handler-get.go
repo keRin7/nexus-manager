@@ -74,7 +74,7 @@ func (h *Handler) postAuthRoot(c *gin.Context) {
 
 }
 
-func (h *Handler) getRoot(c *gin.Context) {
+func (h *Handler) getRepos(c *gin.Context) {
 	token, _ := h.GetToken(c)
 	username := h.nexusmanager.Auth.GetUsername(token)
 	logrus.Println("User: ", username, "get access to: ", h.nexusmanager.Config.Nexus_repo+c.Param("id"))
@@ -90,7 +90,7 @@ func (h *Handler) getRoot(c *gin.Context) {
 	sort.Slice(list.Images, func(i, j int) bool {
 		return list.Images[i].Data < list.Images[j].Data
 	})
-	tmpl, _ := template.ParseFiles("template/index.html")
+	tmpl, _ := template.ParseFiles("template/repo.html")
 	tmpl.Execute(c.Writer, &DataStruct{list, *repo, h.nexusmanager.Config.Nexus_repo + c.Param("id"), username})
 }
 
@@ -110,7 +110,9 @@ func (h *Handler) PostDelete(c *gin.Context) {
 	var token string
 	var err error
 	var access bool
+	var tag, image, repo string
 	success_deleted_images := "Deleted images: <BR>"
+
 	//Get JWT token from cookie, it need for getting username
 	if token, err = h.GetToken(c); err != nil {
 		c.Redirect(http.StatusFound, "/auth/")
@@ -127,28 +129,50 @@ func (h *Handler) PostDelete(c *gin.Context) {
 		for _, value := range c.PostFormArray("flexCheckChecked") {
 			elems := strings.Split(value, "/")
 			if len(elems) >= 3 {
-				tag := elems[len(elems)-1]
-				image := elems[len(elems)-2]
-				repo := strings.Join(elems[:len(elems)-2], "/")
+				tag = elems[len(elems)-1]
+				image = elems[len(elems)-2]
+				repo = strings.Join(elems[:len(elems)-2], "/")
 				if err := h.nexusmanager.DeleteImageByTag(repo+"/"+image, tag); err != nil {
 					logrus.Println(err.Error())
 				} else {
 					success_deleted_images = success_deleted_images + "<BR>" + repo + "/" + image + ":" + tag
 					logrus.Println("Endpoint: /delete,  Username:" + username + "image deleted success: +" + repo + "/" + image + tag)
+
 				}
 			} else {
 				logrus.Println("Endpoint: /delete , Username:"+username+", The delete-url isn`t full:", strings.Join(elems, " "))
 			}
 
 		}
-		tmpl, _ := template.ParseFiles("template/simple-text.html")
-		tmpl.Execute(c.Writer, gin.H{"Text": success_deleted_images})
+		tmpl, _ := template.ParseFiles("template/deleted.html")
+		tmpl.Execute(c.Writer, gin.H{
+			"Text": success_deleted_images,
+			"Back": repo + "/" + image,
+		})
 		return
 
 	}
 	logrus.Println("Username:" + username + " tries to delete images ,but ... forbidden")
 
-	tmpl, _ := template.ParseFiles("template/simple-text.html")
+	tmpl, _ := template.ParseFiles("template/forbidden.html")
 	tmpl.Execute(c.Writer, gin.H{"Text": "Forbidden"})
+
+}
+
+type ReposList struct {
+	Repo []struct {
+		Name string
+		Size int64
+		Date int64
+	}
+}
+
+func (h *Handler) getReposList(c *gin.Context) {
+
+	repos := h.nexusmanager.List()
+
+	for _, repo := range repos.Images {
+		logrus.Printf("Name: %s Size: %d mb", repo, h.nexusmanager.GetRepoSize(repo)/1024/1024)
+	}
 
 }

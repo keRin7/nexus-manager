@@ -32,7 +32,12 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	repos := router.Group("/:repo")
 	{
 		repos.Use(h.authMiddleware)
-		repos.GET("/*id", h.getRoot)
+		repos.GET("/*id", h.getRepos)
+	}
+
+	root := router.Group("/")
+	{
+		root.GET("/", h.getReposList)
 	}
 
 	router.Static("/assets", "./assets")

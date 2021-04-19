@@ -225,3 +225,42 @@ func (c *NexusManager) DeleteImageByTag(imageNameWithRepoPath string, tag string
 	fmt.Printf("%v", out)
 	return nil
 }
+
+func (c *NexusManager) GetRepoSize(image string) int64 {
+	headers := map[string]string{
+		"Accept": ACCEPT_HEADER,
+	}
+
+	layers := make(map[string]int64)
+
+	tags := c.ListTagsByImage(image)
+
+	var imageManifest ImageManifest
+
+	for _, tag := range tags {
+
+		url := fmt.Sprintf("%s/repository/%s/v2/%s/manifests/%s", c.Config.Nexus_url, c.Config.Nexus_repo, image, tag)
+		out, _ := c.rest.DoGet(url, headers, c.Config.Nexus_username, c.Config.Nexus_password)
+
+		err := json.Unmarshal(out, &imageManifest)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+
+		for _, v := range imageManifest.Layers {
+			layers[v.Digest] = v.Size
+			//imageSize += v.Size
+		}
+
+	}
+
+	var projectSize int64
+
+	for _, v := range layers {
+		projectSize = projectSize + v
+		//imageSize += v.Size
+	}
+
+	return projectSize
+
+}

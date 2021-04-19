@@ -15,7 +15,7 @@
     <div class="container ">
       <div class="row ">
         <div class="w-75 my-4">
-           <h2><center>{{ .CurrentRepo }}</center></h2><br>
+           <h2><center>Repos:</center></h2><br>
         </div>
     <div class="w-25 my-4">
       <h2><center>{{ .Username }}</center></h2><br>
@@ -25,32 +25,17 @@
 
 <div class="container-fluid">
 <div class="row">
-    <div class="col-md-2">
-      <div class="btn-group text-center">
-        <button type="button" class="btn btn-success dropdown-toggle " data-bs-toggle="dropdown" aria-expanded="false">
-          Repositories
-        </button>
-        <ul class="dropdown-menu">
-          {{range .Repos.Images}}
-          <li><a class="dropdown-item " href="/{{ . }}">{{ . }}</a></li>
-           {{end}}
-        </ul>
-      </div>
+    <div class="col-md-1">
+      
     </div>
-    <div class="col-md-10">
+    <div class="col-md-11">
       <div class="row">
         <div class="input-group mb3">
-          <div class="input-group-text checkbox rows select-all  col-md-1">
-            <input id="all" type="checkbox" />
-          </div>
           <div class="input-group-text  col-md-3">
-            <h5>Image tag</h5>
+            <h5>Repo name</h5>
           </div>
           <div class="input-group-text  col-md-1">
-            <h5>Image size</h5>
-          </div>
-          <div class="input-group-text  col-md-3">
-            <h5>Top layer modification date</h5>
+            <h5>Repos size</h5>
           </div>
         </div>
       </div>
@@ -59,17 +44,11 @@
       {{range .Images.Images}}
       <div class="row">
        <div class="input-group mb3">
-          <div class="input-group-text checkbox rows col-md-1">
-            <input class="checkbox rows mt-0" type="checkbox" value="{{ $repo }}/{{ .Id }}" id="flexCheckChecked" name="flexCheckChecked" >
-          </div>
           <div class="input-group-text col-md-3">
             {{ .Id }}
           </div>
           <div  class="input-group-text col-md-1">
             {{ .Size }}Mb
-          </div>
-          <div  class="input-group-text col-md-3">
-            {{ .Data }}
           </div>
        </div>
       </div>

@@ -58,7 +58,7 @@ func (t *Auth) GetUsername(accessToken string) string {
 }
 
 func (t *Auth) CheckAccess(accessToken string) (bool, error) {
-	AccessList := []string{"maxim.vorobyev", "www"}
+	AccessList := []string{"maxim.vorobyev", "evsyukovaa"}
 	var username string
 	var err error
 
