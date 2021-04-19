@@ -159,20 +159,21 @@ func (h *Handler) PostDelete(c *gin.Context) {
 
 }
 
-type ReposList struct {
-	Repo []struct {
-		Name string
-		Size int64
-		Date int64
-	}
+type RepoTemplate struct {
+	RepoName string
+	Size     int64
 }
 
 func (h *Handler) getReposList(c *gin.Context) {
+	var StructRepoTemplate struct {
+		Data []RepoTemplate
+	}
 
 	repos := h.nexusmanager.List()
 
 	for _, repo := range repos.Images {
-		logrus.Printf("Name: %s Size: %d mb", repo, h.nexusmanager.GetRepoSize(repo)/1024/1024)
+		StructRepoTemplate.Data = append(StructRepoTemplate.Data, RepoTemplate{repo, h.nexusmanager.GetRepoSize(repo) / 1024 / 1024})
 	}
-
+	tmpl, _ := template.ParseFiles("template/index.html")
+	tmpl.Execute(c.Writer, &StructRepoTemplate)
 }

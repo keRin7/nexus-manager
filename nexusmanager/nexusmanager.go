@@ -14,7 +14,7 @@ import (
 
 type NexusManager struct {
 	Config  *Config
-	cache   *appcache.AppCache
+	Cache   *appcache.AppCache
 	rest    *rest_client.Rest_client
 	Ldapcli *ldapcli.LdapCli
 	Auth    *auth.Auth
@@ -69,7 +69,7 @@ type LayersHistory2 struct {
 func New(config *Config) *NexusManager {
 	return &NexusManager{
 		Config:  config,
-		cache:   appcache.NewCache(),
+		Cache:   appcache.NewCache(),
 		rest:    rest_client.NewRestClient(),
 		Ldapcli: ldapcli.New(config.Ldap),
 		Auth:    &auth.Auth{},
@@ -161,7 +161,7 @@ func (c *NexusManager) GetSize(image string, tag string) int64 {
 }
 
 func (c *NexusManager) GetDataV1(image string, tag string) string {
-	if v, ok := c.cache.Get(image + tag); ok {
+	if v, ok := c.Cache.GetData(image + tag); ok {
 		return v
 	}
 
@@ -179,7 +179,7 @@ func (c *NexusManager) GetDataV1(image string, tag string) string {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	c.cache.Set(image+tag, layersHistory2.Created)
+	c.Cache.SetData(image+tag, layersHistory2.Created)
 	return layersHistory2.Created
 
 }

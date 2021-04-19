@@ -18,7 +18,7 @@
            <h2><center>Repos:</center></h2><br>
         </div>
     <div class="w-25 my-4">
-      <h2><center>{{ .Username }}</center></h2><br>
+      <h2><center>123</center></h2><br>
     </div>
   </div>
   </div>
@@ -39,13 +39,13 @@
           </div>
         </div>
       </div>
-      {{ $repo := .CurrentRepo }}
+      
       <form action="/delete/" method="POST">
-      {{range .Images.Images}}
+      {{range .Data}}
       <div class="row">
        <div class="input-group mb3">
           <div class="input-group-text col-md-3">
-            {{ .Id }}
+            {{ .RepoName }}
           </div>
           <div  class="input-group-text col-md-1">
             {{ .Size }}Mb
@@ -53,9 +53,7 @@
        </div>
       </div>
       {{end}}
-      <div class="my-4">
-        <button type="submit" class="btn btn-danger">Delete selected items</button>
-      </div>
+     
       </form>
 </div>
 </div>

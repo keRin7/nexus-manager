@@ -10,7 +10,7 @@ func NewCache() *AppCache {
 	}
 }
 
-func (r *AppCache) Set(key string, value string) bool {
+func (r *AppCache) SetData(key string, value string) bool {
 	_, ok := r.data[key]
 	if ok {
 		return false
@@ -20,7 +20,7 @@ func (r *AppCache) Set(key string, value string) bool {
 	}
 }
 
-func (r *AppCache) Get(key string) (string, bool) {
+func (r *AppCache) GetData(key string) (string, bool) {
 
 	value, ok := r.data[key]
 
