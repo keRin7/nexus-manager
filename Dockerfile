@@ -11,5 +11,7 @@ FROM alpine:3.9
 LABEL maintainer="m.vorobev"
 WORKDIR /app
 COPY --from=build-env /go/src/app/bin/app /app/
+COPY --from=build-env /go/src/app/assets/ /app/assets/
+COPY --from=build-env /go/src/app/template/ /app/template/
 RUN chmod +x /app/app
 CMD ["/app/app"]
