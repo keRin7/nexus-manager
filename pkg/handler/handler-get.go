@@ -172,18 +172,22 @@ var StructRepoTemplate struct {
 }
 
 func (h *Handler) getReposList(c *gin.Context) {
+	//var sortedRepoTemplate struct {
+	//	Data []RepoTemplate
+	//	Time time.Time
+	//}
 
-	//time.Now()
-	//logrus.Println(StructRepoTemplate.Time)
-	//logrus.Println(time.Now())
-	//logrus.Println(time.Since(StructRepoTemplate.Time))
 	if time.Since(StructRepoTemplate.Time) > 1*time.Minute {
 		repos := h.nexusmanager.List()
-
+		StructRepoTemplate.Data = nil
 		for _, repo := range repos.Images {
 			StructRepoTemplate.Data = append(StructRepoTemplate.Data, RepoTemplate{repo, h.nexusmanager.GetRepoSize(repo) / 1024 / 1024})
 		}
 		StructRepoTemplate.Time = time.Now()
+
+		sort.Slice(StructRepoTemplate.Data, func(i, j int) bool {
+			return StructRepoTemplate.Data[i].Size > StructRepoTemplate.Data[j].Size
+		})
 	}
 
 	tmpl, _ := template.ParseFiles("template/index.html")

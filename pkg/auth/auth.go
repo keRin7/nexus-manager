@@ -8,6 +8,7 @@ import (
 )
 
 type Auth struct {
+	Admin_users []string
 }
 
 type tokenClaims struct {
@@ -58,7 +59,6 @@ func (t *Auth) GetUsername(accessToken string) string {
 }
 
 func (t *Auth) CheckAccess(accessToken string) (bool, error) {
-	AccessList := []string{"maxim.vorobyev", "evsyukovaa"}
 	var username string
 	var err error
 
@@ -66,7 +66,7 @@ func (t *Auth) CheckAccess(accessToken string) (bool, error) {
 		return false, err
 	}
 
-	for _, v := range AccessList {
+	for _, v := range t.Admin_users {
 		if v == username {
 			return true, nil
 		}

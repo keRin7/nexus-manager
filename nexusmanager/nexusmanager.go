@@ -35,29 +35,51 @@ type ImageTags struct {
 }
 
 // func ImageManifest / GetSize
-type ImageManifest struct {
-	SchemaVersion int64       `json:"schemaVersion"`
-	MediaType     string      `json:"mediaType"`
-	Config        LayerInfo   `json:"config"`
-	Layers        []LayerInfo `json:"layers"`
-}
+//type ImageManifest struct {
+//	SchemaVersion int64       `json:"schemaVersion"`
+//	MediaType     string      `json:"mediaType"`
+//	Config        LayerInfo   `json:"config"`
+//	Layers        []LayerInfo `json:"layers"`
+//}
 
 // including in ImageManifest
-type LayerInfo struct {
-	MediaType string `json:"mediaType"`
-	Size      int64  `json:"size"`
-	Digest    string `json:"digest"`
+//type LayerInfo struct {
+//	MediaType string `json:"mediaType"`
+//	Size      int64  `json:"size"`
+//	Digest    string `json:"digest"`
+//}
+
+type ImageManifest struct {
+	SchemaVersion int64  `json:"schemaVersion"`
+	MediaType     string `json:"mediaType"`
+	Config        struct {
+		MediaType string `json:"mediaType"`
+		Size      int64  `json:"size"`
+		Digest    string `json:"digest"`
+	} `json:"config"`
+	Layers []struct {
+		MediaType string `json:"mediaType"`
+		Size      int64  `json:"size"`
+		Digest    string `json:"digest"`
+	} `json:"layers"`
 }
 
 // func GetDataV1
+//type ImageManifestV1 struct {
+//	SchemaVersion int64            `json:"schemaVersion"`
+//	History       []LayersHistory1 `json:"history"`
+//}
+
+// func GetDataV1
+//type LayersHistory1 struct {
+//	V1Compatibility string `json:"v1Compatibility"`
+//}
+
 type ImageManifestV1 struct {
-	SchemaVersion int64            `json:"schemaVersion"`
-	History       []LayersHistory1 `json:"history"`
-}
-
-// func GetDataV1
-type LayersHistory1 struct {
-	V1Compatibility string `json:"v1Compatibility"`
+	SchemaVersion int64 `json:"schemaVersion"`
+	History       []struct {
+		V1Compatibility string `json:"v1Compatibility"`
+	} `json:"history"`
 }
 
 // func GetDataV1
@@ -72,7 +94,7 @@ func New(config *Config) *NexusManager {
 		Cache:   appcache.NewCache(),
 		rest:    rest_client.NewRestClient(),
 		Ldapcli: ldapcli.New(config.Ldap),
-		Auth:    &auth.Auth{},
+		Auth:    &auth.Auth{Admin_users: config.Admin_users},
 	}
 }
 
