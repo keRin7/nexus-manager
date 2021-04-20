@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/keRin7/nexus-manager/nexusmanager"
@@ -164,16 +165,27 @@ type RepoTemplate struct {
 	Size     int64
 }
 
+var StructRepoTemplate struct {
+	Data []RepoTemplate
+	Time time.Time
+	//TimeDiff time.Time
+}
+
 func (h *Handler) getReposList(c *gin.Context) {
-	var StructRepoTemplate struct {
-		Data []RepoTemplate
+
+	//time.Now()
+	//logrus.Println(StructRepoTemplate.Time)
+	//logrus.Println(time.Now())
+	//logrus.Println(time.Since(StructRepoTemplate.Time))
+	if time.Since(StructRepoTemplate.Time) > 1*time.Minute {
+		repos := h.nexusmanager.List()
+
+		for _, repo := range repos.Images {
+			StructRepoTemplate.Data = append(StructRepoTemplate.Data, RepoTemplate{repo, h.nexusmanager.GetRepoSize(repo) / 1024 / 1024})
+		}
+		StructRepoTemplate.Time = time.Now()
 	}
 
-	repos := h.nexusmanager.List()
-
-	for _, repo := range repos.Images {
-		StructRepoTemplate.Data = append(StructRepoTemplate.Data, RepoTemplate{repo, h.nexusmanager.GetRepoSize(repo) / 1024 / 1024})
-	}
 	tmpl, _ := template.ParseFiles("template/index.html")
 	tmpl.Execute(c.Writer, &StructRepoTemplate)
 }

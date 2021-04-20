@@ -37,6 +37,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	root := router.Group("/")
 	{
+		root.Use(h.authMiddleware)
 		root.GET("/", h.getReposList)
 	}
 
