@@ -1,7 +1,7 @@
 package nexusmanager
 
 import (
-	"github.com/keRin7/nexus-manager/pkg/ldapcli"
+	"github.com/keRin7/nexus-manager/pkg/ldapclient"
 )
 
 type Config struct {
@@ -10,11 +10,11 @@ type Config struct {
 	Nexus_password string   `env:"NEXUS_PASSWORD"`
 	Nexus_repo     string   `env:"NEXUS_REPO"`
 	Admin_users    []string `env:"ADMIN_USERS" envSeparator:" "`
-	Ldap           *ldapcli.Config
+	Ldap           *ldapclient.Config
 }
 
 func NewConfig() *Config {
 	return &Config{
-		Ldap: ldapcli.NewConfig(),
+		Ldap: ldapclient.NewConfig(),
 	}
 }

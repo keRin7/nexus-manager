@@ -7,17 +7,17 @@ import (
 
 	"github.com/keRin7/nexus-manager/pkg/appcache"
 	"github.com/keRin7/nexus-manager/pkg/auth"
-	"github.com/keRin7/nexus-manager/pkg/ldapcli"
+	"github.com/keRin7/nexus-manager/pkg/ldapclient"
 	"github.com/keRin7/nexus-manager/pkg/rest_client"
 	"github.com/sirupsen/logrus"
 )
 
 type NexusManager struct {
-	Config  *Config
-	Cache   *appcache.AppCache
-	rest    *rest_client.Rest_client
-	Ldapcli *ldapcli.LdapCli
-	Auth    *auth.Auth
+	Config     *Config
+	Cache      *appcache.AppCache
+	rest       *rest_client.Rest_client
+	Ldapclient *ldapclient.LdapClient
+	Auth       *auth.Auth
 }
 
 // specific header for nexus API
@@ -77,7 +77,10 @@ type ImageManifest struct {
 
 type ImageManifestV1 struct {
 	SchemaVersion int64 `json:"schemaVersion"`
-	History       []struct {
+	FsLayers      []struct {
+		BlobSum string `json:"blobSum"`
+	} `json:"fsLayers"`
+	History []struct {
 		V1Compatibility string `json:"v1Compatibility"`
 	} `json:"history"`
 }
@@ -90,11 +93,11 @@ type LayersHistory2 struct {
 
 func New(config *Config) *NexusManager {
 	return &NexusManager{
-		Config:  config,
-		Cache:   appcache.NewCache(),
-		rest:    rest_client.NewRestClient(),
-		Ldapcli: ldapcli.New(config.Ldap),
-		Auth:    &auth.Auth{Admin_users: config.Admin_users},
+		Config:     config,
+		Cache:      appcache.NewCache(),
+		rest:       rest_client.NewRestClient(),
+		Ldapclient: ldapclient.New(config.Ldap),
+		Auth:       &auth.Auth{Admin_users: config.Admin_users},
 	}
 }
 
@@ -182,9 +185,10 @@ func (c *NexusManager) GetSize(image string, tag string) int64 {
 
 }
 
-func (c *NexusManager) GetDataV1(image string, tag string) string {
-	if v, ok := c.Cache.GetData(image + tag); ok {
-		return v
+// Get top layer data created and layersSHA
+func (c *NexusManager) GetDataAndSHAV1(image string, tag string) (data string, sha string) {
+	if data, sha, ok := c.Cache.GetData(image + tag); ok {
+		return data, sha
 	}
 
 	url := fmt.Sprintf("%s/repository/%s/v2/%s/manifests/%s", c.Config.Nexus_url, c.Config.Nexus_repo, image, tag)
@@ -201,9 +205,14 @@ func (c *NexusManager) GetDataV1(image string, tag string) string {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	c.Cache.SetData(image+tag, layersHistory2.Created)
-	return layersHistory2.Created
+	// Join fslayers
+	layersSHA := ""
+	for _, l := range imageManifestV1.FsLayers {
+		layersSHA = layersSHA + " " + l.BlobSum
+	}
 
+	c.Cache.SetData(image+tag, layersSHA, layersHistory2.Created)
+	return layersHistory2.Created, layersSHA
 }
 
 func (c *NexusManager) GetImageSHA(image string, tag string) (string, error) {
