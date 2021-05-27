@@ -38,7 +38,7 @@ type DataStruct struct {
 func tagHasAliases(list Images, sha string, tag string) bool {
 	for id, elem := range list.Images {
 		if elem.SHA == sha {
-			list.Images[id].Tags = list.Images[id].Tags + " <BR>" + tag
+			list.Images[id].Tags = list.Images[id].Tags + "? <BR>" + tag
 			return true
 		}
 	}
@@ -48,17 +48,17 @@ func tagHasAliases(list Images, sha string, tag string) bool {
 func (h *Handler) getRepos(c *gin.Context) {
 	token, _ := h.GetToken(c)
 	username := h.nexusmanager.Auth.GetUsername(token)
-	logrus.Println("User: ", username, "get access to: ", h.nexusmanager.Config.Nexus_repo+c.Param("id"))
+	logrus.Println("User: ", username, "get access to: ", h.nexusmanager.Config.Nexus_repo+"/"+c.Param("id"))
 
 	var list Images
-	tags := h.nexusmanager.ListTagsByImage(h.nexusmanager.Config.Nexus_repo + c.Param("id"))
+	tags := h.nexusmanager.ListTagsByImage(h.nexusmanager.Config.Nexus_repo + "/" + c.Param("id"))
 	repo := h.nexusmanager.List()
 	for _, v := range tags {
-		data, sha := h.nexusmanager.GetDataAndSHAV1(h.nexusmanager.Config.Nexus_repo+c.Param("id"), v)
+		data, sha := h.nexusmanager.GetDataAndSHAV1(h.nexusmanager.Config.Nexus_repo+"/"+c.Param("id"), v)
 		if tagHasAliases(list, sha, v) {
 			continue
 		}
-		size := h.nexusmanager.GetSize(h.nexusmanager.Config.Nexus_repo+c.Param("id"), v)
+		size := h.nexusmanager.GetSize(h.nexusmanager.Config.Nexus_repo+"/"+c.Param("id"), v)
 		list.Images = append(list.Images, Image{v, v, strconv.FormatInt(size/1024/1024, 10), data, sha})
 	}
 
@@ -67,7 +67,7 @@ func (h *Handler) getRepos(c *gin.Context) {
 	})
 
 	tmpl, _ := template.ParseFiles("template/repo.html")
-	tmpl.Execute(c.Writer, &DataStruct{list, *repo, h.nexusmanager.Config.Nexus_repo + c.Param("id"), username})
+	tmpl.Execute(c.Writer, &DataStruct{list, *repo, h.nexusmanager.Config.Nexus_repo + "/" + c.Param("id"), username})
 }
 
 type RepoTemplate struct {
@@ -97,4 +97,19 @@ func (h *Handler) getReposList(c *gin.Context) {
 
 	tmpl, _ := template.ParseFiles("template/index.html")
 	tmpl.Execute(c.Writer, &StructRepoTemplate)
+}
+
+type ImageDataStruct struct {
+	ImageLayers             []nexusmanager.ImageLayerTemplate
+	CurrentRepo             string
+	ImagePropertyUser       string
+	ImagePropertyWorkingDir string
+	ImagePropertyEntrypoint []string
+	ImagePropertyEnv        []string
+}
+
+func (h *Handler) getImageDetail(c *gin.Context) {
+	ImageLayers, ImagePropertyUser, ImagePropertyWorkingDir, ImagePropertyEntrypoint, ImagePropertyEnv := h.nexusmanager.GetLayersInfoV1(h.nexusmanager.Config.Nexus_repo+"/"+c.Param("id"), c.Param("tag"))
+	tmpl, _ := template.ParseFiles("template/image.html")
+	tmpl.Execute(c.Writer, &ImageDataStruct{ImageLayers, h.nexusmanager.Config.Nexus_repo + "/" + c.Param("id") + "/" + c.Param("tag"), ImagePropertyUser, ImagePropertyWorkingDir, ImagePropertyEntrypoint, ImagePropertyEnv})
 }

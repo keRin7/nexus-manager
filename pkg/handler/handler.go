@@ -29,10 +29,16 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		auth.POST("/", h.postAuthRoot)
 	}
 
-	repos := router.Group("/:repo")
+	repos := router.Group("/:repo/:id")
 	{
 		repos.Use(h.authMiddleware)
-		repos.GET("/*id", h.getRepos)
+		repos.GET("/", h.getRepos)
+	}
+
+	images := router.Group("/:repo/:id/:tag")
+	{
+		images.Use(h.authMiddleware)
+		images.GET("/", h.getImageDetail)
 	}
 
 	root := router.Group("/")

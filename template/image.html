@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <!-- Bootstrap CSS -->
+    <link href="/assets/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+
+    <title>NexusManager</title>
+  </head>
+  <body>
+    <div class="container ">
+      <div class="row ">
+        <div class="w-75 my-4">
+           <h2><center>{{.CurrentRepo}}</center></h2><br>
+        </div>
+    <div class="w-25 my-4">
+      <h2><center></center></h2><br>
+    </div>
+  </div>
+  </div>
+  
+  <code><p class="text-left">
+    <span class="d-block p-2 bg-secondary text-white">Common properties:</span>
+    <span class="d-block p-2 bg-info text-white">User: {{ .ImagePropertyUser }}</span>
+    <span class="d-block p-2 bg-secondary text-white">Entrypoint: {{ .ImagePropertyEntrypoint }}</span>
+    <span class="d-block p-2 bg-info text-white">WorkDir: {{ .ImagePropertyWorkingDir }}</span>
+    <span class="d-block p-2 bg-secondary text-white">Env:  {{ .ImagePropertyEnv }}</span>
+</p>
+  </code>
+<div class="container-fluid">
+<div class="row">
+      <div class="row">
+          <div class="input-group-text  col-md-1">
+            <h5>Date </h5>
+          </div>
+          <div class="input-group-text  col-md-1">
+            <h5>Size(Mb)</h5>
+          </div>
+          <div class="input-group-text  col-md-10">
+            <h5>Cmd</h5>
+          </div>
+        
+      </div>
+      {{ range .ImageLayers }}
+      <div class="row">
+       
+          <div class="input-group-text col-md-1">
+            <code><p class="text-primary">{{ .Date }}</p></code>
+          </div>
+          <div class="input-group-text col-md-1">
+            <code><p class="text-primary">{{ .Size }}Mb</p></code>
+          </div>
+          <div  class="input-group-text col-md-10">
+            <code align="left" > {{ .Cmd }}</code>
+          </div>
+       
+      </div>
+      {{end}}
+</div>
+</div>
+
+    <!-- Optional JavaScript; choose one of the two! -->
+
+    <!-- Option 1: Bootstrap Bundle with Popper -->
+    <script src="/assets/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <!-- Option 2: Separate Popper and Bootstrap JS -->
+    <!--
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js" integrity="sha384-SR1sx49pcuLnqZUnnPwx6FCym0wLsk5JZuNx2bPPENzswTNFaQU1RDvt3wT4gWFG" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.min.js" integrity="sha384-j0CNLUeiqtyaRmlzUHCPZ+Gy5fQu0dQ6eZ/xAww941Ai1SxSY+0EQqNXNE6DZiVc" crossorigin="anonymous"></script>
+    -->
+  </body>
+</html>
